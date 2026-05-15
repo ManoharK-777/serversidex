@@ -1,9 +1,10 @@
-require('dotenv').config();
 const express = require('express');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
+const resend = new Resend(process.env.RESEND_API_KEY);
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -11,63 +12,54 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Email Transporter Configuration
-const transporter = nodemailer.createTransport({
-    service: 'gmail', // You can change this to another provider if needed
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
-
 // Root route for health check
 app.get('/', (req, res) => {
-    res.json({ status: "ServerSide X API is active and running." });
+    res.json({ status: "ServerSide X API is active and running with Resend." });
 });
 
 // POST route to handle form submission
-app.post('/submit', (req, res) => {
+app.post('/submit', async (req, res) => {
     const { name, email, message } = req.body;
-    
+
     // Validate inputs
     if (!name || !email || !message) {
         return res.status(400).json({ error: 'All fields are required' });
     }
 
     try {
-        // Send email
-        const mailOptions = {
-            from: `"${name} (ServerSide X)" <${process.env.EMAIL_USER}>`,
-            to: process.env.EMAIL_RECEIVER, // Receiver email
-            replyTo: email,
-            subject: `New Transmission from ${name}`,
-            text: `You have received a new transmission via ServerSide X.\n\nIdentifier: ${name}\nComm-Link: ${email}\nPayload:\n${message}`,
-            html: `
-                <h3>New Transmission Received</h3>
-                <p><strong>Identifier:</strong> ${name}</p>
-                <p><strong>Comm-Link:</strong> ${email}</p>
-                <p><strong>Payload:</strong><br/>${message}</p>
-            `
-        };
+        console.log(`Received transmission from: ${name} (${email})`);
 
-        // Attempt to send email in the background (Fire and Forget)
-        if (process.env.EMAIL_USER && process.env.EMAIL_USER !== 'your_email@gmail.com') {
-            transporter.sendMail(mailOptions)
-                .then(() => console.log(`Email sent successfully to ${process.env.EMAIL_RECEIVER}`))
-                .catch(err => console.error("Background Email Error (SMTP might be blocked):", err.message));
-        } else {
-            console.log("⚠️ WARNING: Email not sent. Please configure the .env file with your real email credentials.");
+        // Send email using Resend API (Works on Render Free Tier!)
+        const { data, error } = await resend.emails.send({
+            from: 'ServerSideX <onboarding@resend.dev>',
+            to: process.env.EMAIL_RECEIVER || 'kmanohar17072007@gmail.com',
+            subject: `🚀 New Payload: ${name}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px; color: #333; border: 1px solid #eee;">
+                    <h2 style="color: #FF4500;">New Transmission Received</h2>
+                    <p><strong>Identifier:</strong> ${name}</p>
+                    <p><strong>Comm-Link:</strong> ${email}</p>
+                    <hr>
+                    <p><strong>Payload Data:</strong></p>
+                    <p style="background: #f9f9f9; padding: 15px; border-radius: 5px;">${message}</p>
+                </div>
+            `
+        });
+
+        if (error) {
+            console.error("Resend Error:", error);
+            return res.status(500).json({ error: 'Failed to send transmission.' });
         }
 
-        // Return a JSON success response for the frontend JS to handle
+        console.log("Transmission sent successfully:", data.id);
         return res.json({ success: true, message: "Transmission payload secured and sent." });
 
     } catch (error) {
-        console.error('Error processing request:', error);
-        return res.status(500).json({ error: 'Error establishing transmission link. Please try again later.' });
+        console.error('System Error:', error);
+        return res.status(500).json({ error: 'Fatal error establishing transmission link.' });
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`ServerSide X API running on port ${PORT}`);
 });
