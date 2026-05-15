@@ -53,17 +53,17 @@ app.post('/submit', async (req, res) => {
             `
         };
 
-        // Attempt to send email
-        // If EMAIL_USER is not set, we'll log a warning and still render success for demo purposes,
-        // but in a real environment it would send the email.
+        // Attempt to send email in the background (Fire and Forget)
+        // This prevents the UI from hanging if the cloud provider (like Render Free Tier) blocks SMTP ports.
         if (process.env.EMAIL_USER && process.env.EMAIL_USER !== 'your_email@gmail.com') {
-            await transporter.sendMail(mailOptions);
-            console.log(`Email sent successfully to ${process.env.EMAIL_RECEIVER}`);
+            transporter.sendMail(mailOptions)
+                .then(() => console.log(`Email sent successfully to ${process.env.EMAIL_RECEIVER}`))
+                .catch(err => console.error("Background Email Error (SMTP might be blocked):", err.message));
         } else {
             console.log("⚠️ WARNING: Email not sent. Please configure the .env file with your real email credentials.");
         }
 
-        // Render the success page with the dynamic user name.
+        // Render the success page immediately without waiting for the email to finish sending.
         res.render('success', { name });
 
     } catch (error) {
