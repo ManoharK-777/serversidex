@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Established | ServerSide X</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Poppins:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="success-page">
+    <!-- Background Elements -->
+    <canvas id="particleCanvas"></canvas>
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+
+    <main class="success-container">
+        <div class="glass-card success-card reveal">
+            <div class="success-icon-wrapper">
+                <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            
+            <h1 class="glitch-title" data-text="TRANSMISSION SECURED">TRANSMISSION SECURED</h1>
+            
+            <div class="terminal-window success-terminal">
+                <div class="log-line">[SYS] Handshake complete.</div>
+                <div class="log-line">[SYS] Payload encrypted and dispatched.</div>
+                <div class="log-line">[SYS] Awaiting administrative response.</div>
+                <div class="log-line blink-cursor">>_</div>
+            </div>
+            
+            <a href="./index.html" class="neon-btn back-btn">
+                <span class="btn-light-sweep"></span>
+                <span class="btn-text">Return to Mainframe</span>
+            </a>
+        </div>
+    </main>
+
+    <script>
+        // Simple success page specific script
+        window.addEventListener('DOMContentLoaded', () => {
+            const card = document.querySelector('.success-card');
+            setTimeout(() => card.classList.add('active'), 100);
+        });
+    </script>
+    <script src="./script.js"></script>
+</body>
+</html>

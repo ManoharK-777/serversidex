@@ -281,10 +281,26 @@ document.addEventListener('DOMContentLoaded', () => {
             formMessage.className = 'form-message';
             submitBtn.classList.add('loading');
             
-            // Add a small delay for dramatic effect
-            setTimeout(() => {
-                contactForm.submit();
-            }, 1000);
+            // Async submit via fetch to decoupled Render backend
+            fetch('https://serversidex.onrender.com/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, email, message })
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = './success.html';
+                } else {
+                    throw new Error('Server returned an error');
+                }
+            })
+            .catch(err => {
+                submitBtn.classList.remove('loading');
+                showError('Error establishing transmission link. Backend may be asleep.');
+                console.error(err);
+            });
         });
 
         function showError(msg) {

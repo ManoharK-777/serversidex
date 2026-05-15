@@ -1,17 +1,13 @@
 require('dotenv').config();
 const express = require('express');
-const path = require('path');
 const nodemailer = require('nodemailer');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Set EJS as the view engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
 // Middleware
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -24,17 +20,18 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Routes
+// Root route for health check
 app.get('/', (req, res) => {
-    res.render('index');
+    res.json({ status: "ServerSide X API is active and running." });
 });
 
-app.post('/submit', async (req, res) => {
+// POST route to handle form submission
+app.post('/submit', (req, res) => {
     const { name, email, message } = req.body;
     
-    // Basic backend validation
+    // Validate inputs
     if (!name || !email || !message) {
-        return res.status(400).send("All fields are required.");
+        return res.status(400).json({ error: 'All fields are required' });
     }
 
     try {
@@ -54,7 +51,6 @@ app.post('/submit', async (req, res) => {
         };
 
         // Attempt to send email in the background (Fire and Forget)
-        // This prevents the UI from hanging if the cloud provider (like Render Free Tier) blocks SMTP ports.
         if (process.env.EMAIL_USER && process.env.EMAIL_USER !== 'your_email@gmail.com') {
             transporter.sendMail(mailOptions)
                 .then(() => console.log(`Email sent successfully to ${process.env.EMAIL_RECEIVER}`))
@@ -63,12 +59,12 @@ app.post('/submit', async (req, res) => {
             console.log("⚠️ WARNING: Email not sent. Please configure the .env file with your real email credentials.");
         }
 
-        // Render the success page immediately without waiting for the email to finish sending.
-        res.render('success', { name });
+        // Return a JSON success response for the frontend JS to handle
+        return res.json({ success: true, message: "Transmission payload secured and sent." });
 
     } catch (error) {
-        console.error("Error sending email:", error);
-        res.status(500).send("Error establishing transmission link. Please try again later.");
+        console.error('Error processing request:', error);
+        return res.status(500).json({ error: 'Error establishing transmission link. Please try again later.' });
     }
 });
 
